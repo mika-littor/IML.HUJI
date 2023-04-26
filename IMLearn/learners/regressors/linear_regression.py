@@ -52,10 +52,9 @@ class LinearRegression(BaseEstimator):
         """
         if self.include_intercept_:
             # add column of ones to the array of x
-            ones = np.full((len(X), 1), 1)
-            X = np.hstack((ones, X))
-        x_pseudo_inverse = pinv(X)
-        self.coefs_ = np.dot(x_pseudo_inverse, y)
+            X = [[obj] for obj in X]
+            X = np.insert(X, 0, 1, axis=1)
+        self.coefs_ = np.dot(pinv(X), y)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -73,8 +72,8 @@ class LinearRegression(BaseEstimator):
         """
         if self.include_intercept_:
             # add column of ones to the array of x
-            ones = np.full((len(X), 1), 1)
-            X = np.hstack((ones, X))
+            X = [[obj] for obj in X]
+            X = np.insert(X, 0, 1, axis=1)
         return np.dot(X, self.coefs_)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
