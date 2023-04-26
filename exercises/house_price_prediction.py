@@ -76,7 +76,7 @@ def preprocess_only_on_train_data(df):
                   "and 1<=condition<=5 "
                   "and 1<=grade<=13 ")
 
-    df = pd.get_dummies(df, prefix='zipcode_', columns=['zipcode'], dummy_na=False)
+    df = pd.get_dummies(df, prefix='zipcode', columns=['zipcode'], dummy_na=False)
     global LST_ZIPCODES_COL
     LST_ZIPCODES_COL = df.filter(regex="^zipcode_").columns.tolist()
     return df
@@ -98,10 +98,21 @@ def preprocess_only_on_test_data(X):
     -------
     half way pre-processed train data
     """
+    # add the missing zipcode columns from the training set
     for col in LST_ZIPCODES_COL:
         zipcode_num = col.split("_")[-1]
-        X[col] = ((X["zipcode"]) == int(zipcode_num)).astype(int)
+        X[col] = (X["zipcode"] == int(zipcode_num))
     X = X.drop(columns="zipcode", axis=1)
+    # replace missing / negative values with the average of the feature
+
+    # Loop over negative columns and replace negative values with the column average
+    columns_mean = X.apply(lambda x: x[x >= 0].mean(skipna=True), axis=0)
+    for col in X.columns:
+        mean = columns_mean[col]
+        # replace negative
+        X[col] = X[col].apply(lambda x: mean if x < 0 else x)
+        # replace null
+        X[col] = X[col].replace(['NA', 'N/A', None, np.nan], mean)
     return X
 
 def convert_columns_float(df):
@@ -116,9 +127,10 @@ def convert_columns_float(df):
 
     """
     for col in list(df.columns):
-        df[col] = pd.to_numeric(df[col], errors='coerce').astype(float)
-        if col == "zipcode":
-            df["zipcode"] = pd.to_numeric(df["zipcode"], errors='coerce').astype(int)
+        if col != "zipcode":
+            df[col] = pd.to_numeric(df[col], errors='coerce').astype(float)
+        # if col == "zipcode":
+        #     df["zipcode"] = pd.to_numeric(df["zipcode"], errors='coerce').astype(int)
     return df
 
 
