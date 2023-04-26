@@ -55,11 +55,17 @@ def preprocess_only_on_train_data(df):
     half way pre-processed train data
     """
     # remove rows with nan values in the dataframe
+    df.replace(['NA', 'N/A', None], np.nan, inplace=True)
     df = df.dropna(axis=0)
     # dropping duplicates
     df = df.drop_duplicates()
+    # change the values in the columns of the dataframe to int
+    # convert the columns in the dataframe to type float
+    df["price"] = pd.to_numeric(df["price"], errors='coerce').astype(float)
+
     # filter the database values according to the column
-    df = df.query("0<price and 0<sqft_living and 0<sqft_lot and 0<sqft_above and 0<sqft_living15 "
+    df = df.query("0<price and 0<sqft_above and 0<sqft_living15 "
+                  "and 15<sqft_living and 15<sqft_lot "
                   "and 0<=floors and 0<=sqft_basement "
                   "and 1900<=yr_built<=2023 "
                   "and 0<=yr_renovated<=2023 "
@@ -70,9 +76,9 @@ def preprocess_only_on_train_data(df):
                   "and 1<=condition<=5 "
                   "and 1<=grade<=13 ")
 
-    df = pd.get_dummies(df, prefix='zc_', columns=['zipcode'])
+    df = pd.get_dummies(df, prefix='zipcode_', columns=['zipcode'], dummy_na=False)
     global LST_ZIPCODES_COL
-    LST_ZIPCODES_COL = df.filter(regex="^zc_").columns.tolist()
+    LST_ZIPCODES_COL = df.filter(regex="^zipcode_").columns.tolist()
     return df
 
 
@@ -94,9 +100,26 @@ def preprocess_only_on_test_data(X):
     """
     for col in LST_ZIPCODES_COL:
         zipcode_num = col.split("_")[-1]
-        X[col] = (X["zipcode"] == zipcode_num).astype(int)
+        X[col] = ((X["zipcode"]) == int(zipcode_num)).astype(int)
     X = X.drop(columns="zipcode", axis=1)
     return X
+
+def convert_columns_float(df):
+    """
+    convert the columns of df into int
+    Parameters
+    ----------
+    df dataframe
+
+    Returns new df
+    -------
+
+    """
+    for col in list(df.columns):
+        df[col] = pd.to_numeric(df[col], errors='coerce').astype(float)
+        if col == "zipcode":
+            df["zipcode"] = pd.to_numeric(df["zipcode"], errors='coerce').astype(int)
+    return df
 
 
 def preprocess_data(X: pd.DataFrame, y: Optional[pd.Series] = None):
@@ -118,12 +141,14 @@ def preprocess_data(X: pd.DataFrame, y: Optional[pd.Series] = None):
     # remove irrelevant columns or columns that have negative correlation with the price
     X = X.drop(["id", "date", "lat", "long", "sqft_lot15"], axis=1)
     # create a column indicates if the building was built or renovated in the past 30 years
+    # convert the columns in the dataframe to type float
+    X = convert_columns_float(X)
     X["renewed_this_century"] = ((X["yr_renovated"] >= 2000) | (X["yr_built"] >= 2000))
-    X["renewed_this_century"] = X["renewed_this_century"].astype(int)
 
     # do some pre-processing separately as deleting data for example can only be done on the train set
     if y is not None:
         # concatenate the X and y data of the train set for processing purpose
+        y.name = "price"
         df_train = pd.concat([X, y], axis=1)
         df_train = preprocess_only_on_train_data(df_train)
         # split again between x and y
@@ -152,7 +177,7 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
         Path to folder in which plots are saved
     """
     # drop the zipcode hot coding as every column matches a few samples
-    X = X.drop(X.filter(regex='^zc_'), axis=1)
+    X = X.drop(X.filter(regex='^zipcode_'), axis=1)
 
     for feature in X:
         # calculate the correlation

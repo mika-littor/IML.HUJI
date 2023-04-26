@@ -41,7 +41,7 @@ def split_train_test(X: pd.DataFrame, y: pd.Series, train_proportion: float = .7
     y_shuffled = y.reindex(shuffled_indexes)
 
     # get the number of rows in the training set according to the train_proportion
-    train_samples_num = int(X.shape[0] * train_proportion)
+    train_samples_num = int(np.ceil(X.shape[0] * train_proportion))
 
     train_x = pd.DataFrame(X_shuffled.iloc[:train_samples_num])
     test_x = pd.DataFrame(X_shuffled.iloc[train_samples_num:])
