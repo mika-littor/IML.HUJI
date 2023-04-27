@@ -101,7 +101,7 @@ def preprocess_only_on_test_data(X):
     # add the missing zipcode columns from the training set
     for col in LST_ZIPCODES_COL:
         zipcode_num = col.split("_")[-1]
-        X[col] = (X["zipcode"] == int(zipcode_num))
+        X[col] = (X["zipcode"] == (zipcode_num))
     X = X.drop(columns="zipcode", axis=1)
     # replace missing / negative values with the average of the feature
 
@@ -156,6 +156,7 @@ def preprocess_data(X: pd.DataFrame, y: Optional[pd.Series] = None):
     # convert the columns in the dataframe to type float
     X = convert_columns_float(X)
     X["renewed_this_century"] = ((X["yr_renovated"] >= 2000) | (X["yr_built"] >= 2000))
+    X["renewed_this_century"] = X["renewed_this_century"].astype(int)
 
     # do some pre-processing separately as deleting data for example can only be done on the train set
     if y is not None:
@@ -198,11 +199,11 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
         denominator = np.std(X[feature]) * np.std(y)
         corr = cov_val_feature_response / denominator
 
-        px.scatter(pd.DataFrame({'x_axis': X[feature], 'y_axis': y}), x="x_axis", y="y_axis", trendline="ols",
-                   title=f"{feature} vs Response of Pearson Correlation={corr}",
-                   labels={"x_axis": f"feature: {feature}", "y_axis": "Response"},
-                   color_discrete_sequence=["blue"],
-                   trendline_color_override="green").write_image(output_path + f"/pearson_corr_{f}.png")
+        # px.scatter(pd.DataFrame({'x_axis': X[feature], 'y_axis': y}), x="x_axis", y="y_axis", trendline="ols",
+        #            title=f"{feature} vs Response of Pearson Correlation={corr}",
+        #            labels={"x_axis": f"feature: {feature}", "y_axis": "Response"},
+        #            color_discrete_sequence=["blue"],
+        #            trendline_color_override="green").write_image(output_path + f"/pearson_corr_{f}.png")
 
 
 if __name__ == '__main__':
@@ -262,6 +263,5 @@ if __name__ == '__main__':
                     layout=go.Layout(title="MSE of test set over different sample sizes of the train set",
                                      xaxis=dict(title="Sample Percentage (Training Set)"),
                                      yaxis=dict(title="MSE (Test Set)"),
-                                     showlegend=False))
-    fig.show()
+                                     showlegend=False)).show()
     # fig.write_image("mse.over.training.percentage.png")
