@@ -41,45 +41,45 @@ def preprocess_on_invalid_pricing(X, y):
     return clean_x, clean_y
 
 
-def preprocess_only_on_train_data(df):
+def preprocess_only_on_train_data(df_train):
     """
     preprocessing of the train data by deleting data which is forbidden over the test data,
     implementing "one hot encoding" on the zipcodes
 
     Parameters
     ----------
-    X : DataFrame of the train set that contains both the x and the y values
+    df_train : DataFrame of the train set that contains both the x and the y values
 
     Returns
     -------
     half way pre-processed train data
     """
     # remove rows with nan values in the dataframe
-    df.replace(['NA', 'N/A', None], np.nan, inplace=True)
-    df = df.dropna(axis=0)
+    df_train.replace(['NA', 'N/A', None], np.nan, inplace=True)
+    df_train = df_train.dropna(axis=0)
     # dropping duplicates
-    df = df.drop_duplicates()
+    df_train = df_train.drop_duplicates()
     # change the values in the columns of the dataframe to int
     # convert the columns in the dataframe to type float
-    df["price"] = pd.to_numeric(df["price"], errors='coerce').astype(float)
+    df_train["price"] = pd.to_numeric(df_train["price"], errors='coerce').astype(float)
 
     # filter the database values according to the column
-    df = df.query("0<price and 0<sqft_above and 0<sqft_living15 "
-                  "and 15<sqft_living and 15<sqft_lot "
-                  "and 0<=floors and 0<=sqft_basement "
-                  "and 1900<=yr_built<=2023 "
-                  "and 0<=yr_renovated<=2023 "
-                  "and 0<=bedrooms<=30 "
-                  "and 0<=bathrooms<=10 "
-                  "and waterfront in (0,  1) "
-                  "and 0<=view<=4 "
-                  "and 1<=condition<=5 "
-                  "and 1<=grade<=13 ")
+    df_train = df_train.query("0<price and 0<sqft_above and 0<sqft_living15 "
+                              "and 15<sqft_living and 15<sqft_lot "
+                              "and 0<=floors and 0<=sqft_basement "
+                              "and 1900<=yr_built<=2023 "
+                              "and 0<=yr_renovated<=2023 "
+                              "and 0<=bedrooms<=30 "
+                              "and 0<=bathrooms<=10 "
+                              "and waterfront in (0,  1) "
+                              "and 0<=view<=4 "
+                              "and 1<=condition<=5 "
+                              "and 1<=grade<=13 ")
 
-    df = pd.get_dummies(df, prefix='zipcode', columns=['zipcode'], dummy_na=False)
+    df_train = pd.get_dummies(df_train, prefix='zipcode', columns=['zipcode'], dummy_na=False)
     global LST_ZIPCODES_COL
-    LST_ZIPCODES_COL = df.filter(regex="^zipcode_").columns.tolist()
-    return df
+    LST_ZIPCODES_COL = df_train.filter(regex="^zipcode_").columns.tolist()
+    return df_train
 
 
 def preprocess_only_on_test_data(X):
@@ -91,9 +91,6 @@ def preprocess_only_on_test_data(X):
     X : DataFrame of shape (n_samples, n_features)
         Design matrix of regression problem
 
-    y : array-like of shape (n_samples, )
-        Response vector corresponding given samples
-
     Returns
     -------
     half way pre-processed train data
@@ -101,7 +98,7 @@ def preprocess_only_on_test_data(X):
     # add the missing zipcode columns from the training set
     for col in LST_ZIPCODES_COL:
         zipcode_num = col.split("_")[-1]
-        X[col] = (X["zipcode"] == (zipcode_num))
+        X[col] = (X["zipcode"] == zipcode_num)
     X = X.drop(columns="zipcode", axis=1)
     # replace missing / negative values with the average of the feature
 
@@ -115,7 +112,8 @@ def preprocess_only_on_test_data(X):
         X[col] = X[col].replace(['NA', 'N/A', None, np.nan], mean)
     return X
 
-def convert_columns_float(df):
+
+def convert_columns_float(data):
     """
     convert the columns of df into int
     Parameters
@@ -126,12 +124,12 @@ def convert_columns_float(df):
     -------
 
     """
-    for col in list(df.columns):
+    for col in list(data.columns):
         if col != "zipcode":
-            df[col] = pd.to_numeric(df[col], errors='coerce').astype(float)
+            data[col] = pd.to_numeric(data[col], errors='coerce').astype(float)
         # if col == "zipcode":
         #     df["zipcode"] = pd.to_numeric(df["zipcode"], errors='coerce').astype(int)
-    return df
+    return data
 
 
 def preprocess_data(X: pd.DataFrame, y: Optional[pd.Series] = None):
@@ -199,11 +197,11 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
         denominator = np.std(X[feature]) * np.std(y)
         corr = cov_val_feature_response / denominator
 
-        # px.scatter(pd.DataFrame({'x_axis': X[feature], 'y_axis': y}), x="x_axis", y="y_axis", trendline="ols",
-        #            title=f"{feature} vs Response of Pearson Correlation={corr}",
-        #            labels={"x_axis": f"feature: {feature}", "y_axis": "Response"},
-        #            color_discrete_sequence=["blue"],
-        #            trendline_color_override="green").write_image(output_path + f"/pearson_corr_{f}.png")
+        px.scatter(pd.DataFrame({'x_axis': X[feature], 'y_axis': y}), x="x_axis", y="y_axis", trendline="ols",
+                   title=f"{feature} vs Response of Pearson Correlation={corr}",
+                   labels={"x_axis": f"feature: {feature}", "y_axis": "Response"},
+                   color_discrete_sequence=["blue"],
+                   trendline_color_override="green").write_image(output_path + f"/pearson_corr_{feature}.png")
 
 
 if __name__ == '__main__':
@@ -226,7 +224,7 @@ if __name__ == '__main__':
     test_x = preprocess_data(test_x)
 
     # Question 3 - Feature evaluation with respect to response
-    # feature_evaluation(train_x, train_y)
+    feature_evaluation(train_x, train_y)
 
     # Question 4 - Fit model over increasing percentages of the overall training data
     # For every percentage p in 10%, 11%, ..., 100%, repeat the following 10 times:
@@ -258,10 +256,9 @@ if __name__ == '__main__':
     upper_border = means + 2 * sds
     lower_border = means - 2 * sds
     go.Figure([go.Scatter(x=lst_p_val, y=upper_border, fill=None, mode="lines", line=dict(color="lightblue")),
-                     go.Scatter(x=lst_p_val, y=lower_border, fill='tonexty', mode="lines", line=dict(color="lightblue")),
-                     go.Scatter(x=lst_p_val, y=lst_mean_val, mode="markers+lines", marker=dict(color="blue"))],
-                    layout=go.Layout(title="MSE of test set over different sample sizes of the train set",
-                                     xaxis=dict(title="Sample Percentage (Training Set)"),
-                                     yaxis=dict(title="MSE (Test Set)"),
-                                     showlegend=False)).show()
-    # fig.write_image("mse.over.training.percentage.png")
+               go.Scatter(x=lst_p_val, y=lower_border, fill='tonexty', mode="lines", line=dict(color="lightblue")),
+               go.Scatter(x=lst_p_val, y=lst_mean_val, mode="markers+lines", marker=dict(color="blue"))],
+              layout=go.Layout(title="MSE of test set over different sample sizes of the train set",
+                               xaxis=dict(title="Sample Percentage (Training Set)"),
+                               yaxis=dict(title="MSE (Test Set)"),
+                               showlegend=False)).write_image("mse.over.training.percentage.png")
