@@ -79,13 +79,15 @@ class Perceptron(BaseEstimator):
             vec_ones.fill(1)
             X = np.c_[vec_ones, X]
 
-        # initialize the coefs
-        self.coefs_ = np.empty(len(X), dtype=float)
+        # # initialize the coefs
+        self.coefs_ = np.empty(X.shape[1], dtype=float)
         self.coefs_.fill(0)
+
+        self.coefs_ = np.zeros(X.shape[1])
 
         # iteration to fit the samples as long as there exists a sample misclassified
         # or that did not reach `self.max_iter_`
-        for iter in range(self.max_iter_):
+        for iter_ in range(self.max_iter_):
             # find a misclassified sample:
             misclassified_sample_exist = False
             for i in range(len(X)):
