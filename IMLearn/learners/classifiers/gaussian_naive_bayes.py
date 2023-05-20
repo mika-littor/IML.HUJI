@@ -39,7 +39,27 @@ class GaussianNaiveBayes(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        raise NotImplementedError()
+        self.fitted_ = True
+        # find the different classes of the y's using set - data structure in which every different value appears
+        # only once
+        self.classes_ = np.array(sorted(list(set(y))))
+        num_classes = len(self.classes_)
+
+        # calculate pi, mu and vars by iterating on each class
+        self.pi_ = np.zeros(num_classes)
+        self.mu_ = []
+        self.vars_ = []
+        for i, class_ in enumerate(self.classes_):
+            # pi is the number of appearances in each class divided by the number of samples
+            count = list(y).count(class_)
+            self.pi_[i] = count / len(y)
+            # mu is the mean of examples per class
+            X_in_class = X[y == class_]
+            self.mu_.append(np.mean(X_in_class, axis=0))
+            # vars is the variance of examples per class
+            self.vars_.append(np.var(X_in_class, axis=0, ddof=1))
+        self.mu_ = np.array(self.mu_)
+        self.vars_ = np.array(self.vars_)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """

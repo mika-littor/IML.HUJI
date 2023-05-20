@@ -145,15 +145,56 @@ def test_lda():
     lda2 = lda.LDA()
     lda2.fit(X, y)
 
-
     print("Ans like:\n", lda1.likelihood(X))
     print("Mine like:\n", lda2.likelihood(X))
 
+    print("Ans loss:\n", lda1.loss(X, y))
+    print("Mine loss:\n", lda2.loss(X, y))
+
+
+def compare_fit_naive_bayes():
+    X = np.array([[10, 2], [3, 4], [-5, 6], [0, 8]])
+    y = np.array([0, 1, 0, 1])
+    
+    ans_classes_, ans_pi_ = np.unique(y, return_counts=True)
+    ans_pi_ = ans_pi_ / len(y)
+    ans_mu_ = np.array([np.mean(X[y == c], axis=0) for c in ans_classes_])
+    ans_vars_ = np.array([np.var(X[y == c], axis=0, ddof=1) for c in ans_classes_])
+
+
+    min_classes_ = np.array(sorted(list(set(y))))
+    num_classes = len(min_classes_)
+
+    # calculate pi, mu and vars by iterating on each class
+    min_pi_ = np.zeros(num_classes)
+    min_mu_ = []
+    min_vars_ = []
+    for i, class_ in enumerate(min_classes_):
+        # pi is the number of appearances in each class divided by the number of samples
+        count = list(y).count(class_)
+        min_pi_[i] = count / len(y)
+        # mu is the mean of examples per class
+        X_in_class = X[y == class_]
+        min_mu_.append(np.mean(X_in_class, axis=0))
+        # vars is the variance of examples per class
+        min_vars_.append(np.var(X_in_class, axis=0, ddof=1))
+    min_mu_ = np.array(min_mu_)
+    min_vars_ = np.array(min_vars_)
+    
+    print("ans classes:\n", ans_classes_)
+    print("mine classes:\n", min_classes_)
+
+    print("ans pi:\n", ans_pi_)
+    print("mine pi:\n", min_pi_)
+
+    print("ans mu:\n", ans_mu_)
+    print("mine mu:\n", min_mu_)
+
+    print("ans vars:\n", ans_vars_)
+    print("mine vars:\n", min_vars_)
 
 def main():
-    # test_cov_lda()
-    # test_lda_fit()
-    test_lda()
+    compare_fit_naive_bayes()
 
 
 if __name__ == "__main__":
