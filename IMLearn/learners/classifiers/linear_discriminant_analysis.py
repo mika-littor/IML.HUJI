@@ -1,3 +1,4 @@
+import math
 from typing import NoReturn
 from ...base import BaseEstimator
 import numpy as np
@@ -46,7 +47,33 @@ class LDA(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        raise NotImplementedError()
+        self.fitted_ = True
+        # find the different classes of the y's using set - data structure in which every different value appears
+        # only once
+        self.classes_ = np.array(sorted(list(set(y))))
+        num_classes = len(self.classes_)
+
+        # calculate pi and mu by iterating on each class
+        self.pi_ = np.zeros(num_classes)
+        self.mu_ = []
+        for i, class_ in enumerate(self.classes_):
+            # pi is the number of appearances in each class divided by the number of samples
+            count = list(y).count(class_)
+            self.pi_[i] = count / len(y)
+            # mu is the mean of examples per class
+            mean_equal = np.mean(X[y == class_], axis=0)
+            self.mu_.append(mean_equal)
+        self.mu_ = np.array(self.mu_)
+
+        # calculate the cov matrix
+        normalized_mu_ = self.mu_[y.astype(int)]
+        X_diff = X - normalized_mu_
+        self.cov_ = np.matmul(X_diff.T, X_diff)
+        # calc the unbiased estimator
+        self.cov_ = self.cov_ / (len(X) - len(self.classes_))
+
+        # calculate the inv matrix to the cov matrix
+        self.cov_inv_ = inv(self.cov_)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -62,7 +89,11 @@ class LDA(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        likelihood = self.likelihood(X)
+        # for each sample find the indexes with the maximal likelihood
+        max_indices = np.argmax(likelihood, axis=1)
+        # choose the classes in that indexes
+        return self.classes_[max_indices]
 
     def likelihood(self, X: np.ndarray) -> np.ndarray:
         """
@@ -82,7 +113,25 @@ class LDA(BaseEstimator):
         if not self.fitted_:
             raise ValueError("Estimator must first be fitted before calling `likelihood` function")
 
-        raise NotImplementedError()
+        features_num = X.shape[1]
+        # the determinant of the cov matrix
+        det_cov = np.linalg.det(self.cov_)
+        # normalization factor or z
+        normalization_factor = np.sqrt(math.pow(2 * math.pi, features_num) * det_cov)
+        # changing the dimensions of the mu to match x's
+        normalized_x = np.expand_dims(X, axis=1)
+        # Calculate the difference between each sample and the mean for each class
+        diff_x_mu = normalized_x - self.mu_
+
+        # inside the exp - the np.einsum does as follows:
+        # 1. Multiply element-wise the diff_x_mu with the self.cov_inv_ -> matrix of shape (N, M, D)
+        # 2. Sum the elements along axes with shared dimensions between the input arrays -> matrix of shape (N, M)
+        # 3. The '...' notation indicates that the output has the same shape as the remaining axes after contraction,
+        # which is (N, M)
+        inside_exp = - np.einsum('...j,...jk,...k->...', diff_x_mu, self.cov_inv_, diff_x_mu) / 2
+
+        # return the final result of the likelihood funciton
+        return self.pi_ * np.exp(inside_exp) / normalization_factor
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -102,4 +151,5 @@ class LDA(BaseEstimator):
             Performance under missclassification loss function
         """
         from ...metrics import misclassification_error
-        raise NotImplementedError()
+        predicted = self._predict(X)
+        return misclassification_error(y, predicted)

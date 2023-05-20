@@ -1,3 +1,4 @@
+# mika.li 322851593
 from __future__ import annotations
 from typing import Callable
 from typing import NoReturn
@@ -55,6 +56,7 @@ class Perceptron(BaseEstimator):
         self.max_iter_ = max_iter
         self.callback_ = callback
         self.coefs_ = None
+        self.fitted_ = False
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
@@ -73,13 +75,14 @@ class Perceptron(BaseEstimator):
         -----
         Fits model with or without an intercept depending on value of `self.fit_intercept_`
         """
+        self.fitted_ = True
         # if it includes an intercept then add column of ones before x
         if self.include_intercept_:
             vec_ones = np.empty(len(X), dtype=float)
             vec_ones.fill(1)
             X = np.c_[vec_ones, X]
 
-        # # initialize the coefs
+        # initialize the coefs
         self.coefs_ = np.empty(X.shape[1], dtype=float)
         self.coefs_.fill(0)
 
@@ -94,13 +97,16 @@ class Perceptron(BaseEstimator):
                 if y[i] * (X[i] @ self.coefs_) <= 0:
                     misclassified_sample_exist = True
                     # call the callback and update the coefs
-                    self.callback_(self, X[i], y[i])
                     self.coefs_ += y[i] * X[i]
+                    self.callback_(self, X[i], y[i])
                     break
+
             # such example not found then end the looping
             if not misclassified_sample_exist:
                 break
+
         self.callback_(self, None, None)
+
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -146,4 +152,5 @@ class Perceptron(BaseEstimator):
             Performance under missclassification loss function
         """
         from ...metrics import misclassification_error
-        return misclassification_error(y, self._predict(X))
+        predicted = self._predict(X)
+        return misclassification_error(y, predicted)
