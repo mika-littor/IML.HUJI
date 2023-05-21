@@ -64,7 +64,9 @@ class LDA(BaseEstimator):
         self.mu_ = np.array(self.mu_)
 
         # calculate the cov matrix
-        # normalized_mu_ = self.mu_[y.astype(int)]
+        # getting the mean vector per simple
+        # The purpose of subtracting the minimum value is to ensure that the calculated indices
+        # are aligned with the indices of self.mu_ array.
         normalized_mu_ = self.mu_[y.astype(np.int32) - self.classes_.min()]
         # normalized_mu_ = self.mu_[y]
         X_diff = X - normalized_mu_
