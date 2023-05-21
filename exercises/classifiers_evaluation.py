@@ -104,19 +104,24 @@ def compare_gaussian_classifiers():
         accuracy_lda = round(accuracy(data_y, lda_predict) * 100, 2)
         fig = make_subplots(rows=1, cols=2,
                             subplot_titles=(
-                                rf"Gaussian Naive Bayes Prediction Accuracy=" + str(accuracy_gnb) + "%",
-                                rf"LDA Accuracy=" + str(accuracy_lda) + "%"))
+                                "\n Gaussian Prediction Accuracy=" + str(accuracy_gnb) + "%",
+                                "\n LDA Accuracy=" + str(accuracy_lda) + "%"))
 
         # Add traces for data-points setting symbols and colors
-        x_first_col = data_x[:, 0]
-        x_second_col = data_x[:, 1]
-        fig.add_traces([go.Scatter(x=x_first_col, y=x_second_col, mode='markers',
-                                   marker=dict(color=gnb_predict, symbol=class_symbols[data_y],
-                                               colorscale=class_colors(3))),
-                        go.Scatter(x=x_first_col, y=x_second_col, mode='markers',
-                                   marker=dict(color=lda_predict, symbol=class_symbols[data_y],
-                                               colorscale=class_colors(3)))],
-                       rows=[1, 1], cols=[1, 2])
+        scatter = []
+        for i, classifier in enumerate(["Gaussian Naive Bayes", "LDA"]):
+            scatter.append(go.Scatter(
+                x=data_x[:, 0],
+                y=data_x[:, 1],
+                mode='markers',
+                marker=dict(
+                    color=gnb_predict if classifier == "Gaussian Naive Bayes" else lda_predict,
+                    symbol=class_symbols[data_y],
+                    colorscale=class_colors(1)
+                ),
+                name=classifier
+            ))
+        fig.add_traces(scatter, rows=[1, 1], cols=[1, 2])
 
         # Add `X` dots specifying fitted Gaussians' means
         gnb_mu_first_col = gnb.mu_[:, 0]
@@ -134,14 +139,11 @@ def compare_gaussian_classifiers():
             fig.add_traces([get_ellipse(gnb.mu_[i], np.diag(gnb.vars_[i])), get_ellipse(lda.mu_[i], lda.cov_)],
                            rows=[1, 1], cols=[1, 2])
 
-        fig.update_yaxes(scaleanchor="x", scaleratio=1)
-        fig.update_layout(title_text=rf"$\text{{Comparing Gaussian Classifiers - {f[:-4]} dataset}}$",
+        fig.update_yaxes(matches="x")
+        fig.update_layout(title_text="<span style='color:blue'>Gaussian Naive Bayes Compared To LDA (data=" + f + ")\n",
                           width=800, height=400, showlegend=False).show()
 
-        # update the size
-        fig.update_layout(title_font_size=25, font_size=20)
-
-        # fig.write_image(f"lda.vs.gnb.{f[:-4]}.png")
+        # fig.write_image(f"gnb_lda_compare.png")
 
 
 if __name__ == '__main__':
