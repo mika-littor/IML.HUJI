@@ -124,29 +124,34 @@ def compare_gaussian_classifiers():
         fig.add_traces(scatter, rows=[1, 1], cols=[1, 2])
 
         # Add `X` dots specifying fitted Gaussians' means
-        gnb_mu_first_col = gnb.mu_[:, 0]
-        gnb_mu_second_col = gnb.mu_[:, 1]
-        lda_mu_first_col = lda.mu_[:, 0]
-        lda_mu_second_col = lda.mu_[:, 1]
-        fig.add_traces([go.Scatter(x=gnb_mu_first_col, y=gnb_mu_second_col, mode="markers",
-                                   marker=dict(symbol="x", color="black", size=15)),
-                        go.Scatter(x=lda_mu_first_col, y=lda_mu_second_col, mode="markers",
-                                   marker=dict(symbol="x", color="black", size=15))],
-                       rows=[1, 1], cols=[1, 2])
+        markers = []
+        for classifier, model in [("Gaussian Naive Bayes", gnb), ("LDA", lda)]:
+            scatter = go.Scatter(
+                x=model.mu_[:, 0],
+                y=model.mu_[:, 1],
+                mode="markers",
+                marker=dict(symbol="x", color="black", size=15),
+                name=classifier
+            )
+            markers.append(scatter)
+        fig.add_traces(markers, rows=[1, 1], cols=[1, 2])
 
         # Add ellipses depicting the covariances of the fitted Gaussians
         for i in range(3):
-            fig.add_traces([get_ellipse(gnb.mu_[i], np.diag(gnb.vars_[i])), get_ellipse(lda.mu_[i], lda.cov_)],
-                           rows=[1, 1], cols=[1, 2])
+            gnb_ellipse = get_ellipse(gnb.mu_[i], np.diag(gnb.vars_[i]))
+            lda_ellipse = get_ellipse(lda.mu_[i], lda.cov_)
 
+            fig.add_trace(gnb_ellipse, row=1, col=1)
+            fig.add_trace(lda_ellipse, row=1, col=2)
+
+        # update the layout to change the size and color
         fig.update_yaxes(matches="x")
         fig.update_layout(title_text="<span style='color:blue'>Gaussian Naive Bayes Compared To LDA (data=" + f + ")\n",
-                          width=800, height=400, showlegend=False).show()
-
-        # fig.write_image(f"gnb_lda_compare.png")
+                          width=700, height=300, showlegend=False)
+        fig.write_image(f"gnb_lda_compare.png")
 
 
 if __name__ == '__main__':
     np.random.seed(0)
-    # run_perceptron()
+    run_perceptron()
     compare_gaussian_classifiers()
