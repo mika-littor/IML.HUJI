@@ -1,4 +1,3 @@
-import math
 from typing import NoReturn
 from ...base import BaseEstimator
 import numpy as np
@@ -117,8 +116,8 @@ class LDA(BaseEstimator):
         # the determinant of the cov matrix
         det_cov = np.linalg.det(self.cov_)
         # normalization factor or z
-        normalization_factor = np.sqrt(math.pow(2 * math.pi, features_num) * det_cov)
-        # changing the dimensions of the mu to match x's
+        normalization_factor = np.sqrt((2 * np.pi) ** features_num * det_cov)
+        # changing the dimensions of the x to match mu
         normalized_x = np.expand_dims(X, axis=1)
         # Calculate the difference between each sample and the mean for each class
         diff_x_mu = normalized_x - self.mu_

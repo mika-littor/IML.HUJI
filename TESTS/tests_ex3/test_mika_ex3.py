@@ -9,6 +9,9 @@ from IMLearn.learners.classifiers import perceptron as per
 from TESTS.tests_ex3 import linear_discriminant_analysis_ans as lda_ans
 from IMLearn.learners.classifiers import linear_discriminant_analysis as lda
 
+from TESTS.tests_ex3 import gaussian_naive_bayes_ans as gnb_ans
+from IMLearn.learners.classifiers import gaussian_naive_bayes as gnb
+
 
 def test_misclassification_error():
     arr1 = np.array([1, 2, 3, 4, 5])
@@ -193,8 +196,27 @@ def compare_fit_naive_bayes():
     print("ans vars:\n", ans_vars_)
     print("mine vars:\n", min_vars_)
 
+def test_gaussian():
+    X = np.array([[1, 2], [3, 1], [0, 3], [0, 8]])
+    y = np.array([0, 1, 0, 1])
+
+    # Instantiate and fit the LDA classifier
+    gnb1 = gnb_ans.GaussianNaiveBayes()
+    gnb1.fit(X, y)
+
+    gnb2 = gnb.GaussianNaiveBayes()
+    gnb2.fit(X, y)
+
+    print("Ans like:\n", gnb1.likelihood(X))
+    print("Mine like:\n", gnb2.likelihood(X))
+
+    arr_loss = np.array([0,0,0,0])
+    print("Ans loss:\n", gnb1.loss(X, arr_loss))
+    print("Mine loss:\n", gnb2.loss(X, arr_loss))
+
+
 def main():
-    compare_fit_naive_bayes()
+    test_gaussian()
 
 
 if __name__ == "__main__":
