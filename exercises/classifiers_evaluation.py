@@ -147,11 +147,11 @@ def compare_gaussian_classifiers():
         # update the layout to change the size and color
         fig.update_yaxes(matches="x")
         fig.update_layout(title_text="<span style='color:blue'>Gaussian Naive Bayes Compared To LDA (data=" + f + ")\n",
-                          width=700, height=300, showlegend=False)
-        fig.write_image(f"gnb_lda_compare.png")
+                          width=700, height=300, showlegend=False).show()
+        # fig.write_image(f"gnb_lda_compare.png")
 
 
 if __name__ == '__main__':
     np.random.seed(0)
-    run_perceptron()
+    # run_perceptron()
     compare_gaussian_classifiers()

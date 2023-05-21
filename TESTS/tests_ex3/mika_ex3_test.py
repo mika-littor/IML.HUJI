@@ -13,7 +13,7 @@ from TESTS.tests_ex3 import gaussian_naive_bayes_ans as gnb_ans
 from IMLearn.learners.classifiers import gaussian_naive_bayes as gnb
 
 
-def test_misclassification_error():
+def f_test_misclassification_error():
     arr1 = np.array([1, 2, 3, 4, 5])
     arr2 = np.array([1, 2, 3, 6, 6])
     print(lf.misclassification_error(arr1, arr2, False))
@@ -27,7 +27,7 @@ def test_accuracy():
     print(lf_ans.accuracy(arr1, arr2))
 
 
-def test_perceptron():
+def f_test_perceptron():
     # Generate some random data for testing
     X = np.array([[1, 2], [0.3, 4], [5, 6], [-7, 528]])
     y = np.array([-1, 1, -1, 1])
@@ -73,13 +73,13 @@ def test_perceptron():
     print("answer:  Misclassification Loss:", loss)
 
 
-def test_run_perceptron():
+def f_test_run_perceptron():
     losses = [1, 3, 4, 5, 9]
     print(list(range(len(losses))))
     print(np.arange(len(losses)).tolist())
 
 
-def test_lda_fit():
+def f_test_lda_fit():
     X = np.array([[10, -2], [32, 4], [-905, 6], [7.5, 8], [9, 140], [151, 12], [13, 14], [15, 16], [17, 18], [19, 20]])
     y = np.array([0, 5, -47, 1, 1, 144, 20, 2, 3, 3])
     classes_ = np.array(sorted(list(set(y))))
@@ -113,7 +113,7 @@ def test_lda_fit():
     cov_ = np.einsum("ki,kj->kij", c, c).sum(axis=0) / (len(X) - len(classes_))
     print(cov_)
 
-def test_cov_lda():
+def f_test_cov_lda():
     X = np.array([[1, 100], [3, 4], [50, 600], [7, 8]])
     y = np.array([1, 0, 0, 1.5])
     classes_, pi_ = np.unique(y, return_counts=True)
@@ -137,7 +137,7 @@ def test_cov_lda():
     print(cov_)
 
 
-def test_lda():
+def f_test_lda():
     X = np.array([[1, 4], [3, 4], [1, 6], [7, 8], [5, 8], [1, 6]])
     y = np.array([1, 1, 0, 1.5, 2, 2])
 
@@ -156,8 +156,8 @@ def test_lda():
 
 
 def compare_fit_naive_bayes():
-    X = np.array([[10, 2], [3, 4], [-5, 6], [0, 8]])
-    y = np.array([0, 1, 0, 1])
+    X = np.array([[1, 2]])
+    y = np.array([0, 1])
     
     ans_classes_, ans_pi_ = np.unique(y, return_counts=True)
     ans_pi_ = ans_pi_ / len(y)
@@ -196,9 +196,9 @@ def compare_fit_naive_bayes():
     print("ans vars:\n", ans_vars_)
     print("mine vars:\n", min_vars_)
 
-def test_gaussian():
-    X = np.array([[1, 2], [3, 1], [0, 3], [0, 8]])
-    y = np.array([0, 1, 0, 1])
+def f_test_gaussian():
+    X = np.array([[1, 10], [3, 1], [0, 3], [0, 8]])
+    y = np.array([2, 1, 0, 1])
 
     # Instantiate and fit the LDA classifier
     gnb1 = gnb_ans.GaussianNaiveBayes()
@@ -216,7 +216,7 @@ def test_gaussian():
 
 
 def main():
-    test_gaussian()
+    f_test_lda()
 
 
 if __name__ == "__main__":
