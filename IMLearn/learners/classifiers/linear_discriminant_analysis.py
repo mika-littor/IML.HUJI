@@ -46,7 +46,6 @@ class LDA(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        self.fitted_ = True
         # find the different classes of the y's using set - data structure in which every different value appears
         # only once
         self.classes_ = np.array(sorted(list(set(y))))
@@ -65,7 +64,9 @@ class LDA(BaseEstimator):
         self.mu_ = np.array(self.mu_)
 
         # calculate the cov matrix
-        normalized_mu_ = self.mu_[y.astype(int)]
+        # normalized_mu_ = self.mu_[y.astype(int)]
+        normalized_mu_ = self.mu_[y.astype(np.int32) - self.classes_.min()]
+        # normalized_mu_ = self.mu_[y]
         X_diff = X - normalized_mu_
         self.cov_ = np.matmul(X_diff.T, X_diff)
         # calc the unbiased estimator
