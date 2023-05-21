@@ -88,20 +88,60 @@ def compare_gaussian_classifiers():
     """
     for f in ["gaussian1.npy", "gaussian2.npy"]:
         # Load dataset
-        x, y = load_dataset(f"../datasets/{f}")
+        data_x, data_y = load_dataset(f"../datasets/{f}")
 
         # Fit models and predict over training set
+        gnb = GaussianNaiveBayes().fit(data_x, data_y)
+        lda = LDA().fit(data_x, data_y)
+        gnb_predict = gnb.predict(data_x)
+        lda_predict = lda.predict(data_x)
 
-        # Plot a figure with two suplots, showing the Gaussian Naive Bayes predictions on the left and LDA predictions
+        # Plot a figure with two subplots, showing the Gaussian Naive Bayes predictions on the left and LDA predictions
         # on the right. Plot title should specify dataset used and subplot titles should specify algorithm and accuracy
         # Create subplots
         from IMLearn.metrics import accuracy
+        accuracy_gnb = round(accuracy(data_y, gnb_predict) * 100, 2)
+        accuracy_lda = round(accuracy(data_y, lda_predict) * 100, 2)
+        fig = make_subplots(rows=1, cols=2,
+                            subplot_titles=(
+                                rf"Gaussian Naive Bayes Prediction Accuracy=" + str(accuracy_gnb) + "%",
+                                rf"LDA Accuracy=" + str(accuracy_lda) + "%"))
 
         # Add traces for data-points setting symbols and colors
+        x_first_col = data_x[:, 0]
+        x_second_col = data_x[:, 1]
+        fig.add_traces([go.Scatter(x=x_first_col, y=x_second_col, mode='markers',
+                                   marker=dict(color=gnb_predict, symbol=class_symbols[data_y],
+                                               colorscale=class_colors(3))),
+                        go.Scatter(x=x_first_col, y=x_second_col, mode='markers',
+                                   marker=dict(color=lda_predict, symbol=class_symbols[data_y],
+                                               colorscale=class_colors(3)))],
+                       rows=[1, 1], cols=[1, 2])
 
         # Add `X` dots specifying fitted Gaussians' means
+        gnb_mu_first_col = gnb.mu_[:, 0]
+        gnb_mu_second_col = gnb.mu_[:, 1]
+        lda_mu_first_col = lda.mu_[:, 0]
+        lda_mu_second_col = lda.mu_[:, 1]
+        fig.add_traces([go.Scatter(x=gnb_mu_first_col, y=gnb_mu_second_col, mode="markers",
+                                   marker=dict(symbol="x", color="black", size=15)),
+                        go.Scatter(x=lda_mu_first_col, y=lda_mu_second_col, mode="markers",
+                                   marker=dict(symbol="x", color="black", size=15))],
+                       rows=[1, 1], cols=[1, 2])
 
         # Add ellipses depicting the covariances of the fitted Gaussians
+        for i in range(3):
+            fig.add_traces([get_ellipse(gnb.mu_[i], np.diag(gnb.vars_[i])), get_ellipse(lda.mu_[i], lda.cov_)],
+                           rows=[1, 1], cols=[1, 2])
+
+        fig.update_yaxes(scaleanchor="x", scaleratio=1)
+        fig.update_layout(title_text=rf"$\text{{Comparing Gaussian Classifiers - {f[:-4]} dataset}}$",
+                          width=800, height=400, showlegend=False).show()
+
+        # update the size
+        fig.update_layout(title_font_size=25, font_size=20)
+
+        # fig.write_image(f"lda.vs.gnb.{f[:-4]}.png")
 
 
 if __name__ == '__main__':
