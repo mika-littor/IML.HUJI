@@ -67,7 +67,7 @@ class LDA(BaseEstimator):
         # getting the mean vector per simple
         # The purpose of subtracting the minimum value is to ensure that the calculated indices
         # are aligned with the indices of self.mu_ array.
-        normalized_mu_ = self.mu_[(y - self.classes_.min()).astype(int)]
+        normalized_mu_ = self.mu_[y.astype(int)]
         X_diff = X - normalized_mu_
         self.cov_ = np.matmul(X_diff.T, X_diff)
         # calc the unbiased estimator
